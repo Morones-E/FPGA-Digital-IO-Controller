@@ -1,6 +1,6 @@
 //==============================================
 //==========Hecho por: Diego Morones============
-//==============v0.41 10/11/2026=================
+//==============v1.0 14/11/2026=================
 //==============================================
 
 module IO (
@@ -18,7 +18,11 @@ module IO (
 	logic [1:0] modo, sleds;
 	logic leds3;
 	logic [25:0] divider;
-	
+	logic btn0_in,btn0_out;
+	logic btn1_in,btn1_out;
+	logic btn2_in,btn2_out;
+	logic btn3_in,btn3_out;
+	logic btn0_clean,btn1_clean,btn2_clean,btn3_clean;
 	//asignacion combinacional
 	assign led1 = ~master_led [0];
 	assign led2 = ~master_led [1];
@@ -31,9 +35,35 @@ module IO (
 	//modo 2: derecha izquierda
 	//modo 3: patron alternado
 	
+	
+		//debouncer
+	debouncer #(
+		.MAX_COUNT(500000)
+	) U_DEBOUNCE0 (
+		.clk(clk),
+		.reset(~btn3_out),
+		.button_in0(btn0_out),
+		.button_out0(btn0_clean),
+		.button_in1(btn1_out),
+		.button_out1(btn1_clean),
+		.button_in2(btn2_out),
+		.button_out2(btn2_clean)
+	);
+	
+	
 	always_ff @(posedge clk) begin
+	//sincronizacion
+	btn0_in <= btn0;
+	btn0_out <= btn0_in;
+	btn1_in <= btn1;
+	btn1_out <= btn1_in;
+	btn2_in <= btn2;
+	btn2_out <= btn2_in;
+	btn3_in <= btn3;
+	btn3_out <= btn3_in;
+
 	//reset listo
-		if (btn3 == 1'b0) begin
+		if (btn3_out == 1'b0) begin
 		master_led <= 4'b0;
 		modo <= 2'b00;
 		sleds <= 2'b00;
@@ -43,7 +73,7 @@ module IO (
 	
 		else begin
 			divider <= divider + 1;
-			if (btn2 == 1'b0) begin
+			if (btn2_clean == 1'b0) begin
 			master_led <= master_led;
 			modo <= modo;
 			sleds <= sleds;
@@ -51,12 +81,12 @@ module IO (
 			divider <= divider;
 			end
 			
-			else if (btn0 == 1'b0 && divider == 26'd49999999) begin
+			else if (btn0_clean == 1'b0 && divider == 26'd49999999) begin
 			modo <= modo + 1;
 			divider <= 26'd0;
 			end
 			
-			else if (btn1 == 1'b0 && divider == 26'd49999999) begin
+			else if (btn1_clean == 1'b0 && divider == 26'd49999999) begin
 			modo <= modo - 1;
 			divider <= 26'd0;
 			end
